@@ -1,0 +1,25 @@
+{
+    "name": "tu-usuario/php-sharepoint-graph-api",
+    "description": "PHP Client for Microsoft Graph API - SharePoint Operations",
+    "type": "library",
+    "license": "MIT",
+    "keywords": ["sharepoint", "microsoft-graph", "php", "api-client", "office365"],
+    "authors": [
+        {
+            "name": "José Sánchez G.",
+            "email": "tu@email.com"
+        }
+    ],
+    "require": {
+        "php": ">=7.4",
+        "ext-curl": "*",
+        "ext-json": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "SharePointClient\\": "src/"
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
