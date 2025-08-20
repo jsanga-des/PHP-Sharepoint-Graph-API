@@ -1,5 +1,5 @@
 {
-    "name": "tu-usuario/php-sharepoint-graph-api",
+    "name": "jsanga-des/php-sharepoint-graph-api",
     "description": "PHP Client for Microsoft Graph API - SharePoint Operations",
     "type": "library",
     "license": "MIT",
@@ -7,7 +7,7 @@
     "authors": [
         {
             "name": "José Sánchez G.",
-            "email": "tu@email.com"
+            "email": "jsangallego@gmail.com"
         }
     ],
     "require": {

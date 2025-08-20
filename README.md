@@ -19,7 +19,7 @@ Este cliente permite realizar operaciones básicas con SharePoint Online, incluy
 
 1. Incluir en el proyecto
 ```bash
-composer require tu-usuario/php-sharepoint-graph-api:dev-main
+composer require jsanga-des/php-sharepoint-graph-api:dev-main
 ```
 
 2. Uso
@@ -37,7 +37,8 @@ $archivos = $client->listFilesBySitePath($site_path, 'Documentos');
 
 1. Clonar o descargar el repositorio:
 ```bash
-git clone https://github.com/tu-usuario/php-sharepoint-graph-api.git
+git clone https://github.com/jsanga-des/php-sharepoint-graph-api.git
+```
 
 2. Uso
 ```php
@@ -74,52 +75,34 @@ $site_path = 'tu-dominio-real.sharepoint.com:/sites/TuSitioReal';
 
 ### Operaciones básicas con archivos
 
-```php
-// Subir un archivo
-include 'TestUploadFile.php';
-
-// Listar archivos
-include 'TestListFiles.php';
-
-// Verificar si existe un archivo
-include 'TestFileExistsInFolder.php';
-
-// Eliminar un archivo
-include 'TestDeleteFile.php';
-```
+- TestUploadFile.php: Subir un archivo
+- TestListFiles.php: Listar archivos
+- TestFileExistsInFolder.php: Verificar si existe un archivo
+- TestDeleteFile.php: Eliminar un archivo
 
 ### Operaciones con rutas específicas del sitio
 
-```php
-// Subir archivo usando ruta del sitio
-include 'uploadFileBySitePath.php';
-
-// Listar archivos por ruta del sitio
-include 'TestListFilesBySitePath.php';
-
-// Eliminar archivo por ruta del sitio
-include 'TestDeleteFileBySitePath.php';
-```
+- TestUploadFileBySitePath.php: Subir archivo usando ruta del sitio
+- TestListFilesBySitePath.php: Listar archivos por ruta del sitio
+- TestDeleteFileBySitePath.php: Eliminar archivo por ruta del sitio
 
 ### Operaciones con carpetas
 
-```php
-// Verificar si existe una carpeta
-include 'TestFolderExists.php';
-```
+- TestFolderExists.php: Verificar si existe una carpeta
+
 
 ## Estructura de archivos de ejemplo
 
 ```
 /ejemplos
-├── TestDeleteFile.php              # Eliminar archivo
-├── TestDeleteFileBySitePath.php    # Eliminar archivo por ruta del sitio
-├── TestFileExistsInFolder.php      # Verificar existencia de archivo
-├── TestFolderExists.php            # Verificar existencia de carpeta
-├── TestListFiles.php               # Listar archivos
-├── TestListFilesBySitePath.php     # Listar archivos por ruta del sitio
-├── TestUploadFile.php              # Subir archivo
-└── uploadFileBySitePath.php        # Subir archivo por ruta del sitio
+├── TestDeleteFile.php            
+├── TestDeleteFileBySitePath.php    
+├── TestFileExistsInFolder.php     
+├── TestFolderExists.php          
+├── TestListFiles.php              
+├── TestListFilesBySitePath.php     
+├── TestUploadFile.php            
+└── uploadFileBySitePath.php        
 ```
 
 ## Configuración avanzada
