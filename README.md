@@ -17,16 +17,18 @@ Este cliente permite realizar operaciones básicas con SharePoint Online, incluy
 
 ## Instalación con composer
 
-1. Incluir en el proyecto
+Instalar la librería php-sharepoint-graph-api 
 ```bash
 composer require jsanga-des/php-sharepoint-graph-api:dev-main
 ```
 
-2. Uso
+Incluir el autoloader
 ```php
-<?php
 require_once __DIR__ . '/vendor/autoload.php';
+```
 
+Importar la clase y creamos instancia del cliente para invocar a sus métodos
+```
 use SharePointClient\SharePointGraphApi;
 
 $client = new SharePointGraphApi($client_id, $tenant_id, $client_secret);
@@ -35,18 +37,20 @@ $archivos = $client->listFilesBySitePath($site_path, 'Documentos');
 
 ## Instalación Manual
 
-1. Clonar o descargar el repositorio:
+Clonar o descargar el repositorio:
 ```bash
 git clone https://github.com/jsanga-des/php-sharepoint-graph-api.git
 ```
 
-2. Uso
+Cargar e incluir la clase SharePointClient desde la ruta que hayamos definido
 ```php
-<?php
 require_once 'path/to/SharePointClient.php';
+```
 
-// Inicializar el cliente SharePoint con las credenciales de Azure AD
+Inicializar cliente para invocar a sus métodos
+```
 $client = new SharePointClient($client_id, $tenant_id, $client_secret);
+$archivos = $client->listFilesBySitePath($site_path, 'Documentos');
 ```
 
 ## Configuración
@@ -118,7 +122,7 @@ $client_secret = $_ENV['SHAREPOINT_CLIENT_SECRET'];
 $site_path = $_ENV['SHAREPOINT_SITE_PATH'];
 ```
 
-### Archivo .env
+Ejemplo para el archivo .env
 
 ```env
 SHAREPOINT_CLIENT_ID=tu-client-id-real
