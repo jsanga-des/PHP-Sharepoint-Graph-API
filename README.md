@@ -28,7 +28,7 @@ require_once __DIR__ . '/vendor/autoload.php';
 ```
 
 Importar la clase y creamos instancia del cliente para invocar a sus métodos
-```
+```php
 use SharePointClient\SharePointGraphApi;
 
 $client = new SharePointGraphApi($client_id, $tenant_id, $client_secret);
@@ -48,7 +48,7 @@ require_once 'path/to/SharePointClient.php';
 ```
 
 Inicializar cliente para invocar a sus métodos
-```
+```php
 $client = new SharePointClient($client_id, $tenant_id, $client_secret);
 $archivos = $client->listFilesBySitePath($site_path, 'Documentos');
 ```
@@ -68,7 +68,6 @@ Antes de usar este cliente, necesitas registrar una aplicación en Azure AD y ob
 ### Configuración básica
 
 ```php
-<?php
 $client_id = 'tu-client-id-real';
 $tenant_id = 'tu-tenant-id-real';
 $client_secret = 'tu-client-secret-real';
