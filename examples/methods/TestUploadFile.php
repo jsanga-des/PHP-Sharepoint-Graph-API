@@ -1,23 +1,64 @@
 <?php
-/**
- * Subir archivo a SharePoint
- */
-require_once __DIR__ . '/../config.php';
 
-$local_file = __DIR__ . '/test_file.txt';
-$remote_file = 'test_file_uploaded.txt';
+require '../../vendor/autoload.php';
+require '../config.php';
 
-// Crear archivo local si no existe
-if (!file_exists($local_file)) {
-    file_put_contents($local_file, "Archivo de prueba " . date('Y-m-d H:i:s') . "\n");
+use SharePointClient\SharePointGraphApi;
+
+$local_filepath = '../test_file.txt';
+$remote_filename = 'test_file_uploaded2.txt';
+$remote_filepath = 'Test/ZN'; // Vacío para raiz
+
+try {
+    $client = new SharePointGraphApi(
+        $client_id,
+        $tenant_id,
+        $pfx_path,
+        $pfx_password
+    );
+     echo "Constructor inicializado correctamente";
+} catch (Exception $e) {
+    echo "Error: " . $e->getMessage();
 }
 
-echo "Subiendo archivo '$local_file' como '$remote_file'...\n";
+try {
+    echo "🔍 Obteniendo Site ID...\\n";
+    $site_id = $client->getSiteId($site_path);
+    echo "✅ Site ID: $site_id\\n";
 
-$result = $client->uploadFile($site_id, $drive_id, $remote_file, $local_file);
-
-if ($result) {
-    echo "✅ Archivo subido correctamente\n";
-} else {
-    echo "❌ Error al subir archivo\n";
+    echo "🔍 Obteniendo Drive ID...\\n";
+    $drive_id = $client->getDriveId($site_id, $drive_name);
+    echo "✅ Drive ID: $drive_id\\n";
+} catch (Exception $e) {
+    echo "Error: " . $e->getMessage();
 }
+
+try {
+    if (!file_exists($local_filepath)) {
+        file_put_contents($local_filepath, "Archivo de prueba " . date('Y-m-d H:i:s') . "\n");
+    }
+    echo "Subiendo archivo '$local_filepath' a Sharepoint ($remote_filepath), renombrado como: '$remote_filename'...\n";
+    // Subir a la carpeta Test/ZN/
+    $result = $client->uploadFile(
+        $site_id, 
+        $drive_id, 
+        $local_filepath,   // Archivo local
+        $remote_filepath,  // Ruta remota
+        $remote_filename   // (opcional)
+    );
+    if ($result) {
+        echo "Archivo subido correctamente\n";
+    } else {
+        echo "Error al subir archivo\n";
+    }
+} catch (Exception $e) {
+    echo "Error: " . $e->getMessage();
+}
+
+
+
+
+
+
+
+

@@ -1,32 +1,25 @@
 <?php
-// Cargar autoloader de Composer
-require_once __DIR__ . '/../vendor/autoload.php';
 
-// Importar la clase
-use SharePointClient\SharePointGraphApi;
+$client_id = 'xxxx-xxxx-xxxx-xxxx-xxxx';
+$tenant_id = 'yyyy-yyyy-yyyy-yyyy-yyyy';
 
-// Configuración
-$client_id = 'xxxx';
-$tenant_id = 'yyyy';
-$client_secret = 'zzzz';
+// Credenciales empleando client secret
+$client_secret = 'aaa?_bbb_ccc_###.1111';
 
-$site_path = 'mysite.sharepoint.com:/sites/nameofmysite';
+// Alternativa, credenciales con certificado PEM
+$pem_path = "";
+$pem_private_key_path = "";
+$pem_passphrase = "";
+
+// Alternativa, credenciales con PFX y clave
+$pfx_path = '../../file.pfx';
+$pfx_password = 'mykeyforfilepfx';
+
+$site_path = 'site.sharepoint.com:/sites/mysite';
 $drive_name = 'Documentos';
 
-try {
-    // Crear cliente
-    $client = new SharePointGraphApi($client_id, $tenant_id, $client_secret);
 
-    // Obtener IDs básicos
-    echo "🔍 Obteniendo Site ID...\\n";
-    $site_id = $client->getSiteId($site_path);
-    echo "✅ Site ID: $site_id\\n";
 
-    echo "🔍 Obteniendo Drive ID...\\n";
-    $drive_id = $client->getDriveId($site_id, $drive_name);
-    echo "✅ Drive ID: $drive_id\\n";
 
-} catch (Exception $e) {
-    echo "❌ Error: " . $e->getMessage() . "\\n";
-    exit(1);
-}
+
+
