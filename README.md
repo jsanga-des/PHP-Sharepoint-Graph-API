@@ -1,7 +1,7 @@
 # Cliente SharePoint PHP
 
 Sencillo **cliente PHP** para interactuar con **SharePoint** Online a **través de Microsoft Graph API**.
-**Versión 1.0.1**
+**Versión 2.0.0**
 
 
 ## Descripción
@@ -12,6 +12,7 @@ Este cliente permite realizar operaciones básicas con SharePoint Online, incluy
 ## Características
 
 - Autenticación con Microsoft Graph API
+- Soporta múltiples entornos Sharepoint y configura cada uno de ellos, con sus respectivas credenciales.
 - Múltiples métodos de autenticación: Client Secret, Certificado PEM y PFX
 - Obtención de IDs de sitio y biblioteca
 - Listado de archivos y carpetas
@@ -27,19 +28,10 @@ Instalar la librería php-sharepoint-graph-api
 composer require jsanga-des/php-sharepoint-graph-api:dev-main
 ```
 
-Incluir el autoloader
+Incluir/disponer del autoloader
 ```php
 require_once __DIR__ . '/vendor/autoload.php';
 ```
-
-Importar la clase y creamos instancia del cliente para emplear sus métodos
-```php
-use SharePointClient\SharePointGraphApi;
-
-$client = new SharePointGraphApi($client_id, $tenant_id, $client_secret);
-$files = $client->listFiles($site_id, $drive_id, $folder, 1);
-```
-
 
 ## Instalación Manual
 
@@ -53,11 +45,107 @@ Cargar e incluir la clase SharePointClient:
 require_once 'path/to/SharePointClient.php';
 ```
 
-Inicializar cliente:
+## Inicialización del cliente:
 ```php
-$client = new SharePointClient($client_id, $tenant_id, $client_secret);
-$files = $client->listFiles($site_id, $drive_id, $folder, 1);
+use SharepointClient\SharepointClient;
+use SharepointClient\Config\ConfigManager;
+
+// Cargar configuración por nombre de entorno
+$config = ConfigManager::getInstance('default');
+// O Alternativamente: $config = ConfigManager::getInstance('entorno1');
+
+// Crear el cliente
+$client = new SharepointClient($config);
 ```
+
+
+## Configuración de entornos:
+
+El cliente utiliza un sistema de entornos definido en el archivo src/Config/Sharepoint.php. Cada sitio o instancia de SharePoint se configura aquí con sus credenciales, método de autenticación y valores generales de ejecución.
+Es importante no exponer aquí las credenciales. Aquí sólo se debe nombrar la variable de entorno que contiene el valor secreto.
+```php
+return [
+    'env' => [
+        'debug' => true,
+        'log_level' => 'DEBUG',
+        'timeout' => 120,
+        'connect_timeout' => 60,
+    ],
+    'sites' => [
+        'default' => [
+            'general' => [
+                'client_id' => getenv('SHAREPOINT_ENTORNO1_CLIENT_ID'),
+                'tenant_id' => getenv('SHAREPOINT_ENTORNO1_TENANT_ID'),
+                'site_path' => getenv('SHAREPOINT_ENTORNO1_SITE_PATH'),
+                'default_library' => getenv('SHAREPOINT_ENTORNO1_DEFAULT_LIBRARY'),
+            ],
+            'auth_method' => getenv('SHAREPOINT_ENTORNO1_AUTH_METHOD') ?? 'client_secret',
+            'auth' => [
+                'client_secret' => [
+                    'secret' => getenv('SHAREPOINT_ENTORNO1_CLIENT_SECRET'),
+                ],
+                'certificate_pfx' => [
+                    'path' => getenv('SHAREPOINT_ENTORNO1_PFX_PATH'),
+                    'passphrase' => getenv('SHAREPOINT_ENTORNO1_PFX_PASSPHRASE'),
+                ],
+                'certificate_crt' => [
+                    'cert_path' => getenv('SHAREPOINT_ENTORNO1_CERT_PATH'),
+                    'key_path' => getenv('SHAREPOINT_ENTORNO1_KEY_PATH'),
+                    'passphrase' => getenv('SHAREPOINT_ENTORNO1_KEY_PASSPHRASE'),
+                ],
+            ],
+        ],
+        // Otros entornos 'entorno2', 'entorno3', etc, con sus respectivas credenciales.
+    ],
+];
+
+```
+
+> **Nota:** Puedes definir tantos entornos en `sites` como desees. 
+
+## Variables de entorno
+
+Ejemplo para el archivo .env
+
+```env
+SHAREPOINT_EMPRESA_A_CLIENT_ID=xxxx-xxxx-xxxx-xxxx
+SHAREPOINT_EMPRESA_A_TENANT_ID=yyyy-yyyy-yyyy-yyyy
+SHAREPOINT_EMPRESA_A_SITE_PATH=miempresa.sharepoint.com:/sites/MiSitio
+SHAREPOINT_EMPRESA_A_DEFAULT_LIBRARY=Documentos
+SHAREPOINT_EMPRESA_A_AUTH_METHOD=client_secret
+SHAREPOINT_EMPRESA_A_CLIENT_SECRET=mi-secret
+SHAREPOINT_EMPRESA_A_PFX_PATH=certificados/mi-certificado.pfx
+SHAREPOINT_EMPRESA_A_PFX_PASSPHRASE=mi-password
+SHAREPOINT_EMPRESA_A_CERT_PATH=certificados/mi-certificado.crt
+SHAREPOINT_EMPRESA_A_KEY_PATH=certificados/private.key
+SHAREPOINT_EMPRESA_A_KEY_PASSPHRASE=mi-key-password
+
+SHAREPOINT_EMPRESA_B_CLIENT_ID=xxxx-xxxx-xxxx-xxxx
+SHAREPOINT_EMPRESA_B_TENANT_ID=yyyy-yyyy-yyyy-yyyy
+SHAREPOINT_EMPRESA_B_SITE_PATH=miempresa.sharepoint.com:/sites/MiSitio
+SHAREPOINT_EMPRESA_B_DEFAULT_LIBRARY=Documentos
+SHAREPOINT_EMPRESA_B_AUTH_METHOD=client_secret
+SHAREPOINT_EMPRESA_B_CLIENT_SECRET=mi-secret
+SHAREPOINT_EMPRESA_B_PFX_PATH=certificados/mi-certificado.pfx
+SHAREPOINT_EMPRESA_B_PFX_PASSPHRASE=mi-password
+SHAREPOINT_EMPRESA_B_CERT_PATH=certificados/mi-certificado.crt
+SHAREPOINT_EMPRESA_B_KEY_PATH=certificados/private.key
+SHAREPOINT_EMPRESA_B_KEY_PASSPHRASE=mi-key-password
+
+SHAREPOINT_OTRO_ENTORNO_CLIENT_ID=xxxx-xxxx-xxxx-xxxx
+SHAREPOINT_OTRO_ENTORNO_TENANT_ID=yyyy-yyyy-yyyy-yyyy
+SHAREPOINT_OTRO_ENTORNO_SITE_PATH=miempresa.sharepoint.com:/sites/MiSitio
+SHAREPOINT_OTRO_ENTORNO_DEFAULT_LIBRARY=Documentos
+SHAREPOINT_OTRO_ENTORNO_AUTH_METHOD=client_secret
+SHAREPOINT_OTRO_ENTORNO_CLIENT_SECRET=mi-secret
+SHAREPOINT_OTRO_ENTORNO_PFX_PATH=certificados/mi-certificado.pfx
+SHAREPOINT_OTRO_ENTORNO_PFX_PASSPHRASE=mi-password
+SHAREPOINT_OTRO_ENTORNO_CERT_PATH=certificados/mi-certificado.crt
+SHAREPOINT_OTRO_ENTORNO_KEY_PATH=certificados/private.key
+SHAREPOINT_OTRO_ENTORNO_KEY_PASSPHRASE=mi-key-password
+```
+
+> **Nota:** Puedes definir varios entornos (src/Config/Sharepoint.php) y referenciar qué variables de entorno deben emplear esos entornos. Lo siguiente será incluir esas variables de entorno en tu servidor, y podrás cargar la configuración correspondiente con ConfigManager::getInstance('otro_entorno').
 
 
 ## Requisitos previos
@@ -97,126 +185,7 @@ $files = $client->listFiles($site_id, $drive_id, $folder, 1);
 | `PEM_FILE_PATH` | Certificado en formato PEM |
 | `PEM_FILE_KEY` | Archivo de clave privada |
 
-### Configuración básica
 
-```php
-$client_id = 'xxxx-xxxx-xxxx-xxxx-xxxx';
-$tenant_id = 'yyyy-yyyy-yyyy-yyyy-yyyy';
-
-// Opción 1: Client Secret
-$client_secret = 'aaa?_bbb_ccc_###.1111';
-
-// Opción 2: Certificado PEM
-$pem_path = "ruta/al/certificado.pem";
-$pem_private_key_path = "ruta/al/private_key.pem";
-$pem_passphrase = ""; // Opcional si la clave tiene passphrase
-
-// Opción 3: Certificado PFX
-$pfx_path = 'ruta/al/certificado.pfx';
-$pfx_password = 'clave_del_pfx';
-
-$site_path = 'site.sharepoint.com:/sites/mysite';
-$drive_name = 'Documentos';
-```
-
-
-## Inicialización del cliente
-
-### Opción 1: Client Secret
-
-En el constructor:
-
-```php
-use SharePointClient\SharePointGraphApi;
-
-$client = new SharePointGraphApi(
-    $client_id,
-    $tenant_id,
-    $client_secret
-);
-```
-
-O alternativamente:
-
-```php
-use SharePointClient\SharePointGraphApi;
-
-$client = new SharePointGraphApi($client_id, $tenant_id);
-$client->setClientSecretAuth($client_secret);
-```
-
-### Opción 2: Certificado PEM
-
-En el constructor:
-
-```php
-use SharePointClient\SharePointGraphApi;
-
-$client = new SharePointGraphApi(
-    $client_id,
-    $tenant_id,
-    $pem_path,
-    $pem_private_key_path,
-    $pem_passphrase // Opcional
-);
-```
-
-O alternativamente:
-
-```php
-use SharePointClient\SharePointGraphApi;
-
-$client = new SharePointGraphApi($client_id, $tenant_id);
-$client->setCertificateAuth(
-    $pem_path,
-    $pem_private_key_path,
-    $pem_passphrase // Opcional
-);
-```
-
-### Opción 3: Certificado PFX
-
-En el constructor:
-
-```php
-use SharePointClient\SharePointGraphApi;
-
-$client = new SharePointGraphApi(
-    $client_id,
-    $tenant_id,
-    $pfx_path,
-    $pfx_password
-);
-```
-
-O alternativamente:
-
-```php
-use SharePointClient\SharePointGraphApi;
-
-$client = new SharePointGraphApi($client_id, $tenant_id);
-$client->setPfxAuth($pfx_path, $pfx_password);
-```
-
-### Cambio dinámico de método de autenticación
-
-```php
-use SharePointClient\SharePointGraphApi;
-
-$client = new SharePointGraphApi($client_id, $tenant_id);
-
-// Usar client secret inicialmente
-$client->setClientSecretAuth($client_secret);
-$files = $client->listFilesBySitePath($site_path, $drive_name);
-
-// Cambiar a certificado PEM
-$client->setCertificateAuth($pem_path, $pem_private_key_path);
-$files = $client->listFilesBySitePath($site_path, $drive_name);
-
-// Cambiar a certificado PFX
-$client->setPfxAuth($pfx_path, $pfx_password);
-$files = $client->listFilesBySitePath($site_path, $drive_name);
-```
 
 ### Ejemplos de uso
 
@@ -248,33 +217,6 @@ $files = $client->listFilesBySitePath($site_path, $drive_name);
 #### Operaciones con carpetas
 
 - [TestFolderExists.php](ejemplos/TestFolderExists.php) → Verificar si existe una carpeta
-
-
-## Configuración avanzada
-
-### Variables de entorno
-
-Se recomienda usar variables de entorno:
-
-```php
-$client_id = $_ENV['SHAREPOINT_CLIENT_ID'];
-$tenant_id = $_ENV['SHAREPOINT_TENANT_ID'];
-$client_secret = $_ENV['SHAREPOINT_CLIENT_SECRET'];
-$pfx_path = $_ENV['SHAREPOINT_PFX_PATH'];
-$pfx_password = $_ENV['SHAREPOINT_PFX_PASSWORD'];
-$site_path = $_ENV['SHAREPOINT_SITE_PATH'];
-```
-
-Ejemplo para el archivo .env
-
-```env
-SHAREPOINT_CLIENT_ID=tu-client-id-real
-SHAREPOINT_TENANT_ID=tu-tenant-id-real
-SHAREPOINT_CLIENT_SECRET=tu-client-secret-real
-SHAREPOINT_PFX_PATH=../../certificate.pfx
-SHAREPOINT_PFX_PASSWORD=tu-password-real
-SHAREPOINT_SITE_PATH=tu-dominio-real.sharepoint.com:/sites/TuSitioReal
-```
 
 
 ## Documentación adicional

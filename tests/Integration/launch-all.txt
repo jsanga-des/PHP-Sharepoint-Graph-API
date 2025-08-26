@@ -1,0 +1,5 @@
+vendor/bin/phpunit --testdox tests/Integration/Authentication/AuthenticationCertificatePfxTest.php
+vendor/bin/phpunit --testdox tests/Integration/Authentication/AuthenticationClientSecretTest.php
+vendor/bin/phpunit --testdox tests/Integration/Config/ConfigManagerTest.php
+vendor/bin/phpunit --testdox tests/Integration/Services/DriveServiceTest.php
+vendor/bin/phpunit --testdox tests/Integration/Services/SiteServiceTest.php
