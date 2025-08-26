@@ -152,7 +152,7 @@ SHAREPOINT_OTRO_ENTORNO_KEY_PASSPHRASE=mi-key-password
 
 ### Dependencias del proyecto
 
-- **PHP**: >= 7.4  
+- **PHP**: >= 8.2  
 - **Extensiones PHP requeridas**:  
   - ext-curl  
   - ext-json  
