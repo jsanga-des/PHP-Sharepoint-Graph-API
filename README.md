@@ -25,13 +25,15 @@ Este cliente permite realizar operaciones básicas con SharePoint Online, incluy
 
 Instalar la librería php-sharepoint-graph-api 
 ```bash
-composer require jsanga-des/php-sharepoint-graph-api:dev-main
+composer require jsanga-des/php-sharepoint-graph-api:2.0.0
 ```
 
 Incluir/disponer del autoloader
 ```php
 require_once __DIR__ . '/vendor/autoload.php';
 ```
+> **Nota:** Este paquete está disponible en [Packagist](https://packagist.org/packages/jsanga-des/php-sharepoint-graph-api)
+
 
 ## Instalación Manual
 
