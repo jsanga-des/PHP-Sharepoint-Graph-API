@@ -1,7 +1,7 @@
 # Cliente SharePoint PHP
 
 Sencillo **cliente PHP** para interactuar con **SharePoint** Online a **través de Microsoft Graph API**.
-**Versión 2.0.0**
+**Versión 2.0.2**
 
 
 ## Descripción
@@ -25,7 +25,7 @@ Este cliente permite realizar operaciones básicas con SharePoint Online, incluy
 
 Instalar la librería php-sharepoint-graph-api 
 ```bash
-composer require jsanga-des/php-sharepoint-graph-api:2.0.0
+composer require jsanga-des/php-sharepoint-graph-api:2.0.2
 ```
 
 Incluir/disponer del autoloader
@@ -33,6 +33,72 @@ Incluir/disponer del autoloader
 require_once __DIR__ . '/vendor/autoload.php';
 ```
 > **Nota:** Este paquete está disponible en [Packagist](https://packagist.org/packages/jsanga-des/php-sharepoint-graph-api)
+
+Ejecutar desde nuestro nuevo proyecto:
+```bash
+php vendor/jsanga-des/php-sharepoint-graph-api/scripts/setup.php
+```
+
+Alternativamente, se puede automatizar este paso agregando lo siguiente en el composer.json de tu proyecto principal:
+```bash
+"scripts": {
+    "post-install-cmd": [
+        "@setup-sharepoint"
+    ],
+    "post-update-cmd": [
+        "@setup-sharepoint"
+    ],
+    "setup-sharepoint": [
+        "php vendor/jsanga-des/php-sharepoint-graph-api/scripts/setup.php"
+    ]
+}
+```
+
+El comando anterior debe crearnos la siguiente estructura de carpetas:
+```
+mi-proyecto/
+├── certs/
+│   ├── (vacío) - Aquí debes incluri los certificados
+├── examples/
+│   ├── CheckCredentials.php
+│   ├── DeleteFile.php
+│   ├── FileExistsInFolder.php
+│   ├── FolderExists.php
+│   ├── ListFiles.php
+│   ├── UploadFile.php
+│   └── test_uploaded.txt
+├── vendor/
+│   └── ...
+├── .env.sharepoint.example
+├── composer.json
+├── composer.lock
+└── Sharepoint.php
+```
+
+Finalmente, crear el archivo .env en la raiz del proyecto. 
+> **Nota:** Fijarse en el archivo .env.sharepoint.example
+
+Por lo que la estructura final será de la siguiente manera:
+```
+mi-proyecto/
+├── certs/
+│   ├── (vacío) - Aquí debes incluri los certificados
+├── examples/
+│   ├── CheckCredentials.php
+│   ├── DeleteFile.php
+│   ├── FileExistsInFolder.php
+│   ├── FolderExists.php
+│   ├── ListFiles.php
+│   ├── UploadFile.php
+│   └── test_uploaded.txt
+├── vendor/
+│   └── ...
+├── .env.sharepoint.example
+├── .env
+├── composer.json
+├── composer.lock
+└── Sharepoint.php
+```
 
 
 ## Instalación Manual
@@ -42,10 +108,72 @@ Clonar o descargar el repositorio:
 git clone https://github.com/jsanga-des/php-sharepoint-graph-api.git
 ```
 
-Cargar e incluir la clase SharePointClient: 
-```php
-require_once 'path/to/SharePointClient.php';
+Ejecutar desde nuestro nuevo proyecto:
+```bash
+php vendor/jsanga-des/php-sharepoint-graph-api/scripts/setup.php
 ```
+
+Alternativamente, se puede automatizar este paso agregando lo siguiente en el composer.json de tu proyecto principal:
+```bash
+"scripts": {
+    "post-install-cmd": [
+        "@setup-sharepoint"
+    ],
+    "post-update-cmd": [
+        "@setup-sharepoint"
+    ],
+    "setup-sharepoint": [
+        "php vendor/jsanga-des/php-sharepoint-graph-api/scripts/setup.php"
+    ]
+}
+```
+
+El comando anterior debe crearnos la siguiente estructura de carpetas:
+```
+mi-proyecto/
+├── certs/
+│   ├── (vacío) - Aquí debes incluri los certificados
+├── examples/
+│   ├── CheckCredentials.php
+│   ├── DeleteFile.php
+│   ├── FileExistsInFolder.php
+│   ├── FolderExists.php
+│   ├── ListFiles.php
+│   ├── UploadFile.php
+│   └── test_uploaded.txt
+├── vendor/
+│   └── ...
+├── .env.sharepoint.example
+├── composer.json
+├── composer.lock
+└── Sharepoint.php
+```
+
+Finalmente, crear el archivo .env en la raiz del proyecto. 
+> **Nota:** Fijarse en el archivo .env.sharepoint.example
+
+Por lo que la estructura final será de la siguiente manera:
+```
+mi-proyecto/
+├── certs/
+│   ├── (vacío) - Aquí debes incluri los certificados
+├── examples/
+│   ├── CheckCredentials.php
+│   ├── DeleteFile.php
+│   ├── FileExistsInFolder.php
+│   ├── FolderExists.php
+│   ├── ListFiles.php
+│   ├── UploadFile.php
+│   └── test_uploaded.txt
+├── vendor/
+│   └── ...
+├── .env.sharepoint.example
+├── .env
+├── composer.json
+├── composer.lock
+└── Sharepoint.php
+```
+
 
 ## Inicialización del cliente:
 ```php
@@ -63,7 +191,7 @@ $client = new SharepointClient($config);
 
 ## Configuración de entornos:
 
-El cliente utiliza un sistema de entornos definido en el archivo src/Config/Sharepoint.php. Cada sitio o instancia de SharePoint se configura aquí con sus credenciales, método de autenticación y valores generales de ejecución.
+El cliente utiliza un sistema de entornos definido en el archivo ./Sharepoint.php. Cada sitio o instancia de SharePoint se configura aquí con sus credenciales, método de autenticación y valores generales de ejecución.
 Es importante no exponer aquí las credenciales. Aquí sólo se debe nombrar la variable de entorno que contiene el valor secreto.
 ```php
 return [
@@ -147,7 +275,7 @@ SHAREPOINT_OTRO_ENTORNO_KEY_PATH=certificados/private.key
 SHAREPOINT_OTRO_ENTORNO_KEY_PASSPHRASE=mi-key-password
 ```
 
-> **Nota:** Puedes definir varios entornos (src/Config/Sharepoint.php) y referenciar qué variables de entorno deben emplear esos entornos. Lo siguiente será incluir esas variables de entorno en tu servidor, y podrás cargar la configuración correspondiente con ConfigManager::getInstance('otro_entorno').
+> **Nota:** Puedes definir varios entornos (./Sharepoint.php) y referenciar qué variables de entorno deben emplear esos entornos. Lo siguiente será incluir esas variables de entorno en tu servidor, y podrás cargar la configuración correspondiente con ConfigManager::getInstance('otro_entorno').
 
 
 ## Requisitos previos
