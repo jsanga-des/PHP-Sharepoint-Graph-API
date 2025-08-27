@@ -210,25 +210,27 @@ class ConfigManager {
      * @throws SharepointException
      */
     private static function loadFullConfigStatic() {
+
         $configFile = self::findConfigFileStatic();
-
         if (!$configFile) {
-            throw SharepointException::configurationError('No se encontró el archivo de configuración `sharepoint.php`');
+            throw SharepointException::configurationError('No se encontró el archivo de configuración `sharepoint.php`. Debe estar en raiz de tu proyecto.');
         }
 
-        // --- Carga de .env ---
-        $envFile = '/.env';
-        if (file_exists($envFile)) {
-            $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-            foreach ($lines as $line) {
-                if (strpos(trim($line), '#') === 0) continue;
-                list($key, $value) = explode('=', $line, 2);
-                $key = trim($key);
-                $value = trim($value, " \n\r\t\v\x00\"'");
-                if (!empty($key)) putenv("$key=$value");
-            }
+        $envFile = self::findEnvFileStatic();
+        if (!$envFile) {
+            throw SharepointException::configurationError('No se encontró el archivo de configuración `sharepoint.php`. Debe estar en raiz de tu proyecto.');
         }
 
+        // Cargar contenido del .env
+        $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        foreach ($lines as $line) {
+            if (strpos(trim($line), '#') === 0) continue;
+            list($key, $value) = explode('=', $line, 2);
+            $key = trim($key);
+            $value = trim($value, " \n\r\t\v\x00\"'");
+            if (!empty($key)) putenv("$key=$value");
+        }
+        
         // Cargar configuración desde sharepoint.php
         $configArray = require $configFile;
 
@@ -271,20 +273,37 @@ class ConfigManager {
                     );
                 }
                 break;
-            case 'certificate_pfx':                
-                if (empty($this->config['path']) || !file_exists($this->config['path'])) {
+            case 'certificate_pfx': 
+                if (empty($this->config['path'])) {
+                    throw SharepointException::configurationError(
+                        "No se ha indicado una variable de entorno para el path del certificado pfx " . $instanceInfo
+                    );
+                }
+                $this->config['path'] = "../" . $this->config['path'];           
+                if (!file_exists($this->config['path'])) {
                     throw SharepointException::configurationError(
                         "La ruta del archivo PFX no es válida o el archivo no existe" . $instanceInfo
                     );
                 }
                 break;
-            case 'certificate_crt':                
-                if (empty($this->config['cert_path']) || !file_exists($this->config['cert_path'])) {
+            case 'certificate_crt':         
+                if (empty($this->config['cert_path'])) {
+                    throw SharepointException::configurationError(
+                        "No se ha indicado una variable de entorno para el path del certificado crt" . $instanceInfo
+                    );
+                }   
+                $this->config['path'] = "../" . $this->config['path'];   
+                if (!file_exists($this->config['cert_path'])) {
                     throw SharepointException::configurationError(
                         "La ruta del certificado CRT no es válida o el archivo no existe" . $instanceInfo
                     );
-                }                
-                if (empty($this->config['key_path']) || !file_exists($this->config['key_path'])) {
+                }             
+                if (empty($this->config['key_path'])) {
+                    throw SharepointException::configurationError(
+                        "No se ha indicado una variable de entorno para el archivo con la clave del certificado CRT" . $instanceInfo
+                    );
+                }
+                if (!file_exists($this->config['key_path'])) {
                     throw SharepointException::configurationError(
                         "La ruta de la clave privada no es válida o el archivo no existe" . $instanceInfo
                     );
@@ -307,27 +326,30 @@ class ConfigManager {
      */
     private static function findConfigFileStatic() {
         $possible_paths = [
-            // Nueva ubicación principal en la raíz del proyecto
-            './Sharepoint.php',
-            'Sharepoint.php',
-            getcwd() . '/Sharepoint.php',
-            
-            // Buscar desde la raíz del proyecto navegando hacia arriba desde vendor
-            dirname(__DIR__, 4) . '/Sharepoint.php', // vendor/jsanga-des/php-sharepoint-graph-api/src → raíz
-            dirname(__DIR__, 3) . '/Sharepoint.php', // vendor/jsanga-des/php-sharepoint-graph-api → raíz
-            
-            // Rutas alternativas por si el usuario movió el archivo
             './Sharepoint.php',
             '../Sharepoint.php',
             '../../Sharepoint.php',
-            
-            // Rutas legacy por compatibilidad (mantener las originales por si acaso)
-            'src/Config/Sharepoint.php',
-            'Sharepoint.php',
-            '../../src/Config/Sharepoint.php',
-            __DIR__ . '/../../src/Config/Sharepoint.php',
-            __DIR__ . '/../src/Config/Sharepoint.php',
-            getcwd() . '/src/Config/Sharepoint.php',
+        ];
+
+        foreach ($possible_paths as $path) {
+            if (file_exists($path)) {
+                return realpath($path);
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Busca de forma estática el archivo .env en rutas posibles
+     *
+     * @return string|null Ruta del archivo
+     */
+    private static function findEnvFileStatic() {
+        $possible_paths = [
+            './.env',
+            '../.env',
+            '../../.env',
         ];
 
         foreach ($possible_paths as $path) {
