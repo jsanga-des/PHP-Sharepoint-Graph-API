@@ -217,7 +217,7 @@ class ConfigManager {
         }
 
         // --- Carga de .env ---
-        $envFile = dirname(__DIR__, 2) . '/.env';
+        $envFile = '/.env';
         if (file_exists($envFile)) {
             $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
             foreach ($lines as $line) {
@@ -271,22 +271,19 @@ class ConfigManager {
                     );
                 }
                 break;
-            case 'certificate_pfx':
-                $this->config['path'] = __DIR__ . '/../../certs/certificate.pfx';
+            case 'certificate_pfx':                
                 if (empty($this->config['path']) || !file_exists($this->config['path'])) {
                     throw SharepointException::configurationError(
                         "La ruta del archivo PFX no es válida o el archivo no existe" . $instanceInfo
                     );
                 }
                 break;
-            case 'certificate_crt':
-                $this->config['cert_path'] = __DIR__ . '/../../certs/certificate.crt';
+            case 'certificate_crt':                
                 if (empty($this->config['cert_path']) || !file_exists($this->config['cert_path'])) {
                     throw SharepointException::configurationError(
                         "La ruta del certificado CRT no es válida o el archivo no existe" . $instanceInfo
                     );
-                }
-                $this->config['key_path'] = __DIR__ . '/../../certs/certificate.key';
+                }                
                 if (empty($this->config['key_path']) || !file_exists($this->config['key_path'])) {
                     throw SharepointException::configurationError(
                         "La ruta de la clave privada no es válida o el archivo no existe" . $instanceInfo
@@ -310,6 +307,21 @@ class ConfigManager {
      */
     private static function findConfigFileStatic() {
         $possible_paths = [
+            // Nueva ubicación principal en la raíz del proyecto
+            './Sharepoint.php',
+            'Sharepoint.php',
+            getcwd() . '/Sharepoint.php',
+            
+            // Buscar desde la raíz del proyecto navegando hacia arriba desde vendor
+            dirname(__DIR__, 4) . '/Sharepoint.php', // vendor/jsanga-des/php-sharepoint-graph-api/src → raíz
+            dirname(__DIR__, 3) . '/Sharepoint.php', // vendor/jsanga-des/php-sharepoint-graph-api → raíz
+            
+            // Rutas alternativas por si el usuario movió el archivo
+            './Sharepoint.php',
+            '../Sharepoint.php',
+            '../../Sharepoint.php',
+            
+            // Rutas legacy por compatibilidad (mantener las originales por si acaso)
             'src/Config/Sharepoint.php',
             'Sharepoint.php',
             '../../src/Config/Sharepoint.php',
