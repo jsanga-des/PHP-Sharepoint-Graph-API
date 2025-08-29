@@ -347,4 +347,204 @@ class FileService {
         
         return $allFiles;
     }
+
+    /**
+     * Crea una nueva carpeta en SharePoint con creación recursiva de estructura
+     * 
+     * Este método crea una nueva carpeta en una ubicación específica de SharePoint.
+     * Si las carpetas padre no existen, las crea automáticamente de forma recursiva,
+     * construyendo toda la estructura de directorios necesaria desde la raíz.
+     * 
+     * @param string $siteId ID del sitio de SharePoint (obligatorio)
+     * @param string $driveId ID del drive donde crear la carpeta (obligatorio)
+     * @param string $parentFolderPath Ruta de la carpeta padre (opcional, vacío para raíz)
+     * @param string|null $folderName Nombre de la nueva carpeta a crear (opcional, si es null se extrae del parentFolderPath)
+     * 
+     * @return bool True si la creación fue exitosa, false en caso de error
+     * 
+     * @throws \Exception Si ocurre un error durante el proceso
+     * 
+     * @example
+     * // Crear carpeta en la raíz con nombre específico
+     * $created = $fileService->createFolder('site123', 'drive456', '', 'Nueva Carpeta');
+     * $created = $fileService->createFolder('site123', 'drive456', 'root', 'Nueva Carpeta');
+     * 
+     * // Crear carpeta dentro de Documents con nombre específico
+     * $created = $fileService->createFolder('site123', 'drive456', 'Documents', 'Reports');
+     * 
+     * // Crear estructura completa anidada (crea Documents, Reports y 2024 si no existen)
+     * $created = $fileService->createFolder('site123', 'drive456', 'Documents/Reports', '2024');
+     * 
+     * // Crear carpeta usando el último segmento del path como nombre
+     * $created = $fileService->createFolder('site123', 'drive456', 'Documents/Reports/2024');
+     * // Esto creará toda la estructura Documents/Reports/2024 si no existe
+     * 
+     * // Crear estructura profunda automáticamente
+     * $created = $fileService->createFolder('site123', 'drive456', 'Projects/WebApp/Frontend/Components');
+     * // Crea toda la estructura: Projects -> WebApp -> Frontend -> Components
+     */
+    public function createFolder($siteId, $driveId, $parentFolderPath = '', $folderName = null) {
+        try {
+            // Si no se proporciona folderName, extraerlo del parentFolderPath
+            if ($folderName === null) {
+                if (empty($parentFolderPath) || $parentFolderPath === "root") {
+                    Helpers::logError("El nombre de la carpeta es requerido cuando se crea en la raíz");
+                    return false;
+                }
+                
+                // Extraer el último segmento de la ruta como nombre de carpeta
+                $trimmedPath = trim($parentFolderPath, '/');
+                $pathSegments = explode('/', $trimmedPath);
+                $folderName = end($pathSegments);
+                
+                // Remover el último segmento del parentFolderPath para obtener la ruta padre real
+                array_pop($pathSegments);
+                $parentFolderPath = empty($pathSegments) ? '' : implode('/', $pathSegments);
+            }
+            
+            // Validar que el nombre de la carpeta no esté vacío
+            if (empty(trim($folderName))) {
+                Helpers::logError("El nombre de la carpeta no puede estar vacío");
+                return false;
+            }
+            
+            // Si hay una ruta padre, asegurar que existe (crear recursivamente si es necesario)
+            if (!empty($parentFolderPath) && $parentFolderPath !== "root") {
+                if (!$this->ensureFolderStructureExists($siteId, $driveId, $parentFolderPath)) {
+                    Helpers::logError("No se pudo crear o verificar la estructura de carpetas padre: '{$parentFolderPath}'");
+                    return false;
+                }
+            }
+            
+            // Determinar la URL base según si se especifica carpeta padre
+            if (empty($parentFolderPath) || $parentFolderPath === "root") {
+                // Para raíz, usar 'root' directamente
+                $graphPath = "root";
+            } else {
+                // Para carpetas específicas, construir ruta con formato Graph API
+                $trimmedPath = trim($parentFolderPath, '/');
+                $cleanedPath = Helpers::cleanUrlPath($trimmedPath);
+                $graphPath = "root:/{$cleanedPath}:";
+            }
+            
+            // Construir la URL de la API de Graph para crear la carpeta
+            $url = "https://graph.microsoft.com/v1.0/sites/$siteId/drives/$driveId/$graphPath/children";
+            
+            // Preparar el payload JSON para crear la carpeta
+            $payload = [
+                'name' => $folderName,
+                'folder' => new \stdClass(), // Objeto vacío para indicar que es una carpeta
+                '@microsoft.graph.conflictBehavior' => 'fail' // Fallar si ya existe
+            ];
+            
+            // Obtener headers de autenticación con content-type para JSON
+            $headers = $this->authManager->getHeaders("application/json");
+            
+            // Realizar la petición POST para crear la carpeta
+            $response = HttpClient::post($url, json_encode($payload), $headers);
+            
+            // Verificar si la respuesta indica éxito (201 Created)
+            if ($response['http_code'] == 201) {
+                // $responseData = json_decode($response['body'], true);
+                return true;
+            }
+            
+            // HTTP 409 Conflict indica que la carpeta ya existe
+            if ($response['http_code'] == 409) {
+                Helpers::logError("La carpeta '{$folderName}' ya existe en '{$parentFolderPath}'");
+                return false;
+            }
+            
+            // Otros códigos de error
+            if ($response['http_code'] != 201) {
+                Helpers::logError("Error Graph createFolder: HTTP {$response['http_code']} - {$response['body']}");
+                Helpers::logError("URL attempted: $url");
+                return false;
+            }
+            
+        } catch (\Exception $e) {
+            Helpers::logError("Excepción al crear la carpeta: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Asegura que toda la estructura de carpetas padre existe, creándola recursivamente si es necesario
+     * 
+     * @param string $siteId ID del sitio de SharePoint
+     * @param string $driveId ID del drive
+     * @param string $folderPath Ruta completa de carpetas a verificar/crear
+     * 
+     * @return bool True si la estructura existe o se creó exitosamente
+     */
+    private function ensureFolderStructureExists($siteId, $driveId, $folderPath) {
+        try {
+            $trimmedPath = trim($folderPath, '/');
+            if (empty($trimmedPath)) {
+                return true; // Ruta vacía significa raíz, que siempre existe
+            }
+            
+            $pathSegments = explode('/', $trimmedPath);
+            $currentPath = '';
+            
+            // Crear cada nivel de carpeta si no existe
+            foreach ($pathSegments as $segment) {
+                $parentPath = $currentPath;
+                $currentPath = empty($currentPath) ? $segment : $currentPath . '/' . $segment;
+                
+                // Verificar si la carpeta actual existe (usando tu función existente)
+                if (!$this->folderExists($siteId, $driveId, $currentPath)) {
+                    // No existe, crearla
+                    if (!$this->createSingleFolder($siteId, $driveId, $parentPath, $segment)) {
+                        return false;
+                    }
+                }
+            }
+            
+            return true;
+        } catch (\Exception $e) {
+            Helpers::logError("Error al asegurar estructura de carpetas: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Crea una sola carpeta sin verificar dependencias
+     * 
+     * @param string $siteId ID del sitio de SharePoint
+     * @param string $driveId ID del drive
+     * @param string $parentPath Ruta de la carpeta padre
+     * @param string $folderName Nombre de la carpeta a crear
+     * 
+     * @return bool True si la creación fue exitosa
+     */
+    private function createSingleFolder($siteId, $driveId, $parentPath, $folderName) {
+        try {
+            // Determinar la URL base según si se especifica carpeta padre
+            if (empty($parentPath)) {
+                $graphPath = "root";
+            } else {
+                $trimmedPath = trim($parentPath, '/');
+                $cleanedPath = Helpers::cleanUrlPath($trimmedPath);
+                $graphPath = "root:/{$cleanedPath}:";
+            }
+            
+            $url = "https://graph.microsoft.com/v1.0/sites/$siteId/drives/$driveId/$graphPath/children";
+            
+            $payload = [
+                'name' => $folderName,
+                'folder' => new \stdClass(),
+                '@microsoft.graph.conflictBehavior' => 'rename' // Renombrar si existe para evitar conflictos durante creación recursiva
+            ];
+            
+            $headers = $this->authManager->getHeaders("application/json");
+            $response = HttpClient::post($url, json_encode($payload), $headers);
+            
+            return $response['http_code'] == 201;
+        } catch (\Exception $e) {
+            Helpers::logError("Error al crear carpeta individual '{$folderName}': " . $e->getMessage());
+            return false;
+        }
+    }
+    
 }

@@ -133,4 +133,15 @@ class SharepointClient {
     public function fileExistsInFolder(string $folderPath, string $fileName): bool {
         return $this->fileService->fileExistsInFolder($this->siteId, $this->driveId, $folderPath, $fileName);
     }
+
+    /**
+     * Crea una nueva carpeta en una ruta remota
+     *
+     * @param string $parentFolderPath Ruta de la carpeta padre (opcional, vacío para raíz)
+     * @param string|null $folderName Nombre de la nueva carpeta a crear (opcional, si es null se extrae del parentFolderPath)
+     * @return bool True si la creación fue exitosa, false en caso de error
+     */
+    public function createFolder(string $parentFolderPath = '', ?string $folderName = null): bool {
+        return $this->fileService->createFolder($this->siteId, $this->driveId, $parentFolderPath, $folderName);
+    }
 }
