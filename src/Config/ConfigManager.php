@@ -46,6 +46,12 @@ class ConfigManager {
      */
     private static $fullConfig = null;
 
+    /**
+     * Indica si las variables de entorno ya fueron cargadas
+     * @var bool
+     */
+    private static $envLoaded = false;
+
     // -------------------------------------------------------------------------
     // Métodos públicos de acceso
     // -------------------------------------------------------------------------
@@ -135,10 +141,10 @@ class ConfigManager {
     /**
      * Verifica si el modo debug está activado
      *
-     * @return bool
+     * @return string|bool
      */
     public function isDebugEnabled() {
-        return (bool)$this->get('debug', false);
+        return $this->get('enviroment', 'local');
     }
 
     /**
@@ -204,34 +210,24 @@ class ConfigManager {
     }
 
     /**
-     * Carga la configuración completa desde el archivo sharepoint.php y el .env
+     * Carga la configuración completa desde el archivo sharepoint.php y maneja variables de entorno
      *
      * @return array
      * @throws SharepointException
      */
     private static function loadFullConfigStatic() {
+        // Cargar variables de entorno antes de cargar el archivo de configuración
+        if (!self::$envLoaded) {
+            self::loadEnvironmentVariables();
+            self::$envLoaded = true;
+        }
 
         $configFile = self::findConfigFileStatic();
         if (!$configFile) {
-            throw SharepointException::configurationError('No se encontró el archivo de configuración `sharepoint.php`. Debe estar en raiz de tu proyecto.');
+            throw SharepointException::configurationError('No se encontró el archivo de configuración `Sharepoint.php`.');
         }
 
-        $envFile = self::findEnvFileStatic();
-        if (!$envFile) {
-            throw SharepointException::configurationError('No se encontró el archivo de configuración `sharepoint.php`. Debe estar en raiz de tu proyecto.');
-        }
-
-        // Cargar contenido del .env
-        $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-        foreach ($lines as $line) {
-            if (strpos(trim($line), '#') === 0) continue;
-            list($key, $value) = explode('=', $line, 2);
-            $key = trim($key);
-            $value = trim($value, " \n\r\t\v\x00\"'");
-            if (!empty($key)) putenv("$key=$value");
-        }
-        
-        // Cargar configuración desde sharepoint.php
+        // Incluir sharepoint.php; getenv() ahora devolverá las variables correctas según el entorno
         $configArray = require $configFile;
 
         if (!is_array($configArray) || empty($configArray['sites'])) {
@@ -241,6 +237,62 @@ class ConfigManager {
         }
 
         return $configArray;
+    }
+
+    /**
+     * Carga las variables de entorno según la configuración de SHAREPOINT_ENV
+     *
+     * @throws SharepointException
+     */
+    private static function loadEnvironmentVariables() {
+        // Primero, verificar si existe un archivo .env para determinar el entorno
+        $envFile = self::findEnvFileStatic();
+        
+        if ($envFile) {
+            // Cargar solo la variable SHAREPOINT_ENV del archivo .env para determinar el modo
+            $envLines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+            $sharepoint_env = null;
+            
+            foreach ($envLines as $line) {
+                $line = trim($line);
+                if (strpos($line, '#') === 0 || empty($line)) continue;
+                
+                if (strpos($line, 'SHAREPOINT_ENV=') === 0) {
+                    list($key, $value) = explode('=', $line, 2);
+                    $sharepoint_env = trim($value, " \n\r\t\v\x00\"'");
+                    break;
+                }
+            }
+            
+            // Si encontramos SHAREPOINT_ENV en el .env, usamos ese valor
+            if ($sharepoint_env !== null) {
+                putenv("SHAREPOINT_ENV=$sharepoint_env");
+            }
+        }
+        
+        // Obtener el entorno final (del .env o del sistema)
+        $environment = getenv('SHAREPOINT_ENV') ?: 'local';
+        
+        // Si el entorno es 'local', cargar todas las variables del archivo .env
+        if ($environment === 'local' && $envFile) {
+            $envLines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+            
+            foreach ($envLines as $line) {
+                $line = trim($line);
+                if (strpos($line, '#') === 0 || empty($line)) continue;
+                
+                $equalPos = strpos($line, '=');
+                if ($equalPos === false) continue;
+                
+                $key = trim(substr($line, 0, $equalPos));
+                $value = trim(substr($line, $equalPos + 1), " \n\r\t\v\x00\"'");
+                
+                if (!empty($key)) {
+                    putenv("$key=$value");
+                }
+            }
+        }
+        // Si el entorno NO es 'local', las variables se tomarán del sistema (ya están en getenv())
     }
 
     /**

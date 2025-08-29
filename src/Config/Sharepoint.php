@@ -11,6 +11,7 @@ return [
      * Estos valores afectan a todas las instancias.
      */
     'env' => [
+        'enviroment' => getenv('SHAREPOINT_ENV') ?? 'debug',
         'debug' => getenv('SHAREPOINT_DEBUG') ?? true,
         'log_level' => getenv('SHAREPOINT_LOG_LEVEL') ?? 'DEBUG',
         'timeout' => getenv('SHAREPOINT_TIMEOUT') ?? 120,

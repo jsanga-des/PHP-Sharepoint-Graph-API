@@ -54,7 +54,7 @@ if (!file_exists($envFile)) {
 # =============================================================================
 
 # Configuración del entorno de ejecución
-APP_ENV=development
+SHAREPOINT_ENV=local
 SHAREPOINT_DEBUG=true
 SHAREPOINT_LOG_LEVEL=DEBUG
 SHAREPOINT_TIMEOUT=120
@@ -95,6 +95,7 @@ if (!file_exists($phpConfig)) {
 return [
 
     'env' => [
+        'enviroment' => getenv('SHAREPOINT_ENV') ?? local,
         'debug' => getenv('SHAREPOINT_DEBUG') ?? true,
         'log_level' => getenv('SHAREPOINT_LOG_LEVEL') ?? 'DEBUG',
         'timeout' => getenv('SHAREPOINT_TIMEOUT') ?? 120,
